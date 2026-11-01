@@ -10,6 +10,7 @@ VERSION = "1.0.0"
 DESCRIPTION = "Brain-SAM"  
 URL ="https://github.com/panyinghong/Brain-SAM"
 AUTHOR = "Pan Yinghong"
+AUTHOR_EMAIL = ""
 LICENSE = "MIT"
 
 # Read the contents of README file
@@ -28,6 +29,13 @@ REQUIRED_PACKAGES = [
     "tqdm>=4.67.1",
     "pillow>=11.1.0",
     "pandas>=2.2.3",
+    "edt>=2.3.0",
+    "medpy>=0.5.2",
+    "monai>=1.3.2",
+    "prefetch-generator>=1.0.3",
+    "segment-anything>=1.0",
+    "surface-distance>=0.1",
+    "torchio>=0.20.0",
 ]
 
 
@@ -49,7 +57,8 @@ setup(
     author=AUTHOR,
     author_email=AUTHOR_EMAIL,
     license=LICENSE,
-    packages=find_packages(),
+    package_dir={"": "Brain-SAM"},
+    packages=find_packages("Brain-SAM"),
     install_requires=REQUIRED_PACKAGES,
     extras_require=EXTRA_PACKAGES,
     python_requires=">=3.10.0",

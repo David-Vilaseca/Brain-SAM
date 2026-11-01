@@ -26,6 +26,32 @@ import random
 from torch.utils.data.distributed import DistributedSampler
 from dataset.data_loader import Dataset_Union_ALL_Val
 
+
+def find_checkpoint(requested):
+    """Resolve the supplied checkpoint and the attached model location."""
+    candidates = [
+        requested,
+        os.path.join(os.path.dirname(__file__), requested),
+        os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "..",
+            "..",
+            "Brain-SAM",
+            "Brain-SAM",
+            "checkpoints",
+            "model.pth",
+        ),
+    ]
+    for candidate in candidates:
+        path = os.path.abspath(os.path.expanduser(candidate))
+        if os.path.isfile(path):
+            return path
+    raise FileNotFoundError(
+        "No se encontró el checkpoint. Rutas comprobadas: "
+        + ", ".join(os.path.abspath(os.path.expanduser(path)) for path in candidates)
+    )
+
 def init_seeds(seed=0, cuda_deterministic=True):
     random.seed(seed)
     np.random.seed(seed)
@@ -84,7 +110,7 @@ def get_dice_score( prev_masks, gt3D):
             
             volume_sum = mask_gt.sum() + mask_pred.sum()
             if volume_sum == 0:
-                return np.NaN
+                return np.nan
             volume_intersect = (mask_gt & mask_pred).sum()
             return 2*volume_intersect / volume_sum
     
@@ -133,18 +159,18 @@ def main():
     )
     parser.add_argument(
         "--snapshot_path",
-        default="/data/pyhData/SAM2/work_dir/prompt_DDP_epilepsy_20250422-1735",
+        default="outputs",
         type=str,
     )
     parser.add_argument(
         "--data_prefix",
         nargs='+',
-        default="",
+        default=[os.path.join(os.path.dirname(__file__), "..", "case")],
         type=str,
     )
     parser.add_argument(
         "--data_name",
-        default="",
+        default="brain",
         type=str,
     )
     parser.add_argument(
@@ -164,23 +190,17 @@ def main():
     )
     parser.add_argument("-bs", "--batch_size", default=2, type=int)
     parser.add_argument("--num_classes", default=2, type=int)
-    parser.add_argument("--num_worker", default=4, type=int)
+    parser.add_argument("--num_worker", default=0, type=int)
     parser.add_argument("--save",default=False,type=bool)
     parser.add_argument("--local_rank", type=int, help="For distributed training")
     parser.add_argument(
         "--checkpoint",
-        default="last",
+        default=os.path.join("checkpoints", "model.pth"),
         type=str,
     )
     parser.add_argument("-tolerance", default=5, type=int)
     args = parser.parse_args()
-    if args.checkpoint == "last":
-        file = "last.pth"
-    elif args.checkpoint=="best":
-        file = "best.pth"
-    else:
-        filename = os.path.basename(args.checkpoint)
-        file  = filename
+    checkpoint_path = find_checkpoint(args.checkpoint)
     if int(os.environ.get("WORLD_SIZE", 1)) > 1:
 
         args.rank = int(os.environ["RANK"])
@@ -197,7 +217,7 @@ def main():
         torch.cuda.set_device(0)
         args.distributed = False
 
-    device = torch.device("cuda", args.local_rank) if torch.cuda.is_available() else torch.device("cpu")
+    device = torch.device("cuda", args.local_rank)
 
 
     if args.rand_crop_size == 0:
@@ -301,11 +321,10 @@ def main():
 
 
 
-    checkpoint_path = os.path.join(args.snapshot_path, file)
     checkpoint = torch.load(checkpoint_path, map_location="cpu")
 
-    model.load_state_dict(checkpoint["model_state_dict"], strict=True)
-    epoch=checkpoint["epoch"]
+    state_dict = checkpoint.get("model_state_dict", checkpoint)
+    model.load_state_dict(remove_module_prefix(state_dict), strict=True)
     model=model.to(device)
     if int(os.environ.get("WORLD_SIZE", 1)) > 1:
         model = torch.nn.parallel.DistributedDataParallel(
@@ -349,9 +368,9 @@ def main():
             auto_TP, auto_FP, auto_TN, auto_FN = auto_cm["TP"], auto_cm["FP"], auto_cm["TN"], auto_cm["FN"]
 
 
-            auto_dice = get_dice_score(masks_auto_bin, seg).item()
-            prompt_dice = get_dice_score(prompt_masks_bin, seg).item()
-            postpre_dice = get_dice_score(postpre_masks_bin, seg).item()
+            auto_dice = float(get_dice_score(masks_auto_bin, seg))
+            prompt_dice = float(get_dice_score(prompt_masks_bin, seg))
+            postpre_dice = float(get_dice_score(postpre_masks_bin, seg))
 
             auto_iou = iou_3d(masks_auto_bin, seg).item()
             prompt_iou = iou_3d(prompt_masks_bin, seg).item()
@@ -526,4 +545,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

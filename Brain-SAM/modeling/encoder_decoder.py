@@ -2,10 +2,8 @@ import torch
 import torch.nn as nn
 from tqdm import tqdm
 import torch.nn.functional as F
-from modeling.edge import ShapeStream3D,EdgeSupervisionLoss3D
-from modeling.Image_ecoder_hiera import ImageEncoder,FpnNeck
-from modeling.prompt_encoder import PromptEncoder, TwoWayTransformer
-from modeling.edge_enhancer import Edge_Enhancer
+from modeling.Image_encoder import ImageEncoder,FpnNeck
+from modeling.prompt_encoder import TwoWayTransformer
 import numpy as np
 import edt
 from monai.losses import DiceCELoss, DiceLoss,DiceFocalLoss
@@ -16,7 +14,7 @@ def compute_dice(mask_gt, mask_pred):
     """
     volume_sum = mask_gt.sum() + mask_pred.sum()
     if volume_sum == 0:
-        return np.NaN
+        return np.nan
     volume_intersect = (mask_gt & mask_pred).sum()
     return 2*volume_intersect / volume_sum
 
@@ -557,4 +555,3 @@ class SAM2_3D_prompt_after_decoder_with_auto_test(nn.Module):
         
             postpre_masks = postpre_pred_list[postpre_max_idx] 
         return masks_auto,prompt_masks,postpre_masks
-

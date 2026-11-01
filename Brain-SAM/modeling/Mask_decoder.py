@@ -17,8 +17,6 @@ from torch.nn import functional as F
 from monai.networks.blocks import UnetrBasicBlock, UnetrPrUpBlock, UnetrUpBlock
 from monai.networks.blocks.dynunet_block import UnetOutBlock
 from monai.networks.nets import ViT
-# from modeling.unet import Unet_decoder, Conv, TwoConv
-from .unet import Unet_decoder, Conv, TwoConv
 
 class UpBlockConvTranspose3d(nn.Module):
     def __init__(self, in_channels=48, out_channels=6):

@@ -120,6 +120,11 @@ class Dataset_Union_ALL_Val(Dataset_Union_ALL):
         self.label_paths = self.label_paths[self.split_idx :: self.split_num]
 
 
+class Union_Dataloader(DataLoader):
+    """DataLoader kept for compatibility with the original training script."""
+
+    pass
+
 
 
 
