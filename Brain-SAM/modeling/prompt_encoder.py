@@ -348,6 +348,8 @@ class PromptEncoder3D(nn.Module):
         point_embeddings = [nn.Embedding(1, embed_dim) for i in range(self.num_point_embeddings)]
         self.point_embeddings = nn.ModuleList(point_embeddings)
         self.not_a_point_embed = nn.Embedding(1, embed_dim)
+        self.mask_tokens = nn.Embedding(1, embed_dim)
+        self.iou_token = nn.Embedding(1, embed_dim)
 
         self.mask_input_size = (image_embedding_size[0], image_embedding_size[1], image_embedding_size[2])
         self.mask_downscaling = nn.Sequential(
@@ -357,16 +359,7 @@ class PromptEncoder3D(nn.Module):
             nn.Conv3d(mask_in_chans // 4, mask_in_chans, kernel_size=2, stride=2),
             LayerNorm3d(mask_in_chans),
             activation(),
-            nn.Conv3d(mask_in_chans, mask_in_chans, kernel_size=2, stride=2),  
-            LayerNorm3d(mask_in_chans),
-            activation(),
-            nn.Conv3d(mask_in_chans, mask_in_chans, kernel_size=2, stride=2),  
-            LayerNorm3d(mask_in_chans),
-            activation(),
-            nn.Conv3d(mask_in_chans, mask_in_chans, kernel_size=2, stride=2),  
-            LayerNorm3d(mask_in_chans),
-            activation(),
-            nn.Conv3d(mask_in_chans, embed_dim, kernel_size=1),  
+            nn.Conv3d(mask_in_chans, embed_dim, kernel_size=1),
                     
         )
         self.no_mask_embed = nn.Embedding(1, embed_dim)
@@ -533,4 +526,3 @@ class PositionEmbeddingRandom3D(nn.Module):
         coords[:, :, 1] = coords[:, :, 1] / image_size[1]
         coords[:, :, 2] = coords[:, :, 2] / image_size[2]
         return self._pe_encoding(coords.to(torch.float))  # B x N x C
-

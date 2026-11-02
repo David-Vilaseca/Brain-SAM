@@ -173,9 +173,8 @@ class new_UNETR_Decoder_combine_auto_prompt(nn.Module):
             norm_name=norm_name,
             res_block=res_block,
         )
-        self.decoder1 = UpBlockConvTranspose3d(48, 6)
-        self.out1= UnetOutBlock(spatial_dims=3, in_channels=6, out_channels=32)  # type: ignore
-        self.out = UnetOutBlock(spatial_dims=3, in_channels=6, out_channels=2) 
+        self.out1= UnetOutBlock(spatial_dims=3, in_channels=48, out_channels=32)  # type: ignore
+        self.out = UnetOutBlock(spatial_dims=3, in_channels=48, out_channels=2)
 
 
 
@@ -186,7 +185,7 @@ class new_UNETR_Decoder_combine_auto_prompt(nn.Module):
             dec2 = self.decoder4(dec3, x_in[1])
             dec1 = self.decoder3(dec2, x_in[0])
             out = self.decoder2(dec1, enc1)
-            dec_out = self.decoder1(out) 
+            dec_out = out
             masks_auto=self.out(dec_out)
             prompt_logits = self.out1(dec_out)
             masks_prompt, iou_pred = self._predict_mask(prompt_logits, prompt_embeddings)
