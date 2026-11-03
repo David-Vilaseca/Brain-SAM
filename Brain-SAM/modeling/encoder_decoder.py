@@ -256,7 +256,7 @@ class SAM2_3D_prompt_after_decoder(nn.Module):
                 new_feature.append(feature)
                 if i==3:
                     _,point_embedding=self.prompt_encoder(image_embeddings=feature, points=[points_input, labels_input],boxes=None,masks=masks_to_prompt, img_size=list(feature.shape[2:]))
-            new_feature.append(img[:, 0:1])
+            new_feature.append(out[:, 0:1])
             if logits is None:
                 masks_prompt,masks_auto, logits = self.mask_decoder(new_feature, point_embedding, logits)
                 prev_masks = torch.sigmoid(masks_prompt)
@@ -482,7 +482,7 @@ class SAM2_3D_prompt_after_decoder_with_auto_test(nn.Module):
                         _,point_embedding=self.prompt_encoder(image_embeddings=feature, points=[points_input, labels_input],boxes=None,masks=masks_to_prompt, img_size=list(feature.shape[2:]))
                 # img_resize = F.interpolate(img[:, 0:1], scale_factor=64 / self.patch_size,mode='trilinear',align_corners=False)
                 # new_feature.append(img_resize)\
-                new_feature.append(img[:, 0:1])
+                new_feature.append(out[:, 0:1])
                 # masks=self.mask_decoder(new_feature,point_embedding)
 
                 if logits is None:

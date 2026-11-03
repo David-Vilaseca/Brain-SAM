@@ -131,7 +131,6 @@ class new_UNETR_Decoder_combine_auto_prompt(nn.Module):
             in_channels=1,
             out_channels=48,
             kernel_size=3,
-            stride=2,
             norm_name=norm_name,
             res_block=res_block,
         )
