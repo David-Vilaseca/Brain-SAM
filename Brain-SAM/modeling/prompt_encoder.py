@@ -146,7 +146,7 @@ class TwoWayTransformer(nn.Module):
         queries = point_embedding
         keys = image_embedding
         for layer in self.layers:
-            queries, keys = layer(
+            keys, queries = layer(
                 queries,
                 keys,
                 query_pe=point_embedding,
