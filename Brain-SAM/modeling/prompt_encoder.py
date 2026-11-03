@@ -119,6 +119,7 @@ class TwoWayTransformer(nn.Module):
         image_embedding: Tensor,
         point_coord,
         dense_embeddings,
+        image_pe: Tensor,
     ) -> Tuple[Tensor, Tensor]:
         """
         Args:
@@ -138,18 +139,18 @@ class TwoWayTransformer(nn.Module):
 
 
         point_embedding = point_coord
-        original_shape = image_embedding.shape
         image_embedding=image_embedding+dense_embeddings
         image_embedding = image_embedding.flatten(2).permute(0, 2, 1)
-        # image_pe = image_pe.flatten(2).permute(0, 2, 1)
+        image_pe = image_pe.flatten(2).permute(0, 2, 1)
         # Apply transformer blocks and final layernorm
         queries = point_embedding
         keys = image_embedding
         for layer in self.layers:
-
-            keys, queries = layer(
-            keys,
-            queries,
+            queries, keys = layer(
+                queries,
+                keys,
+                query_pe=point_embedding,
+                key_pe=image_pe,
             )
         q = queries + point_embedding
         attn_out = self.final_attn_token_to_image(q=q, k=keys, v=keys)
@@ -468,7 +469,12 @@ class PromptEncoder3D(nn.Module):
             dense_embeddings = self.no_mask_embed.weight.reshape(1, -1, 1, 1, 1).expand(
                 bs, -1, self.image_embedding_size[0], self.image_embedding_size[1], self.image_embedding_size[2]
             )
-        features,point_embedding= self.transformer(image_embeddings, sparse_embeddings,dense_embeddings)
+        features,point_embedding= self.transformer(
+            image_embeddings,
+            sparse_embeddings,
+            dense_embeddings,
+            self.get_dense_pe(),
+        )
         features = features.reshape([bs, -1] + feat_size)
 
         
