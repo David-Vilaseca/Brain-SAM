@@ -2,4 +2,4 @@ __pycache__/
 *.py[cod]
 *.egg-info/
 outputs/
-checkpoints/*.pth
+Brain-SAM/checkpoints/*.pth
