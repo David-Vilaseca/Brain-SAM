@@ -239,7 +239,12 @@ class SAM2_3D_prompt_after_decoder(nn.Module):
             reduction="mean"
         )
 
-        out = F.interpolate(img.float(), scale_factor=512 / self.patch_size, mode='trilinear')
+        out = F.interpolate(
+            img.float(),
+            size=(self.patch_size, self.patch_size, self.patch_size),
+            mode='trilinear',
+            align_corners=False,
+        )
         input_batch = out
         batch_features, feature_list,sample= self.img_encoder(input_batch)
         prev_masks = torch.zeros_like(seg).to(seg.device)
@@ -439,7 +444,12 @@ class SAM2_3D_prompt_after_decoder_with_auto_test(nn.Module):
         dice_loss_auto=DiceLoss(include_background=False, softmax=True,sigmoid=False, to_onehot_y=True, reduction="none")
     #     loss_cal = DiceCELoss(include_background=False, softmax=True, to_onehot_y=True, lambda_dice=0.5, lambda_ce=0.5)
       
-        out = F.interpolate(img.float(), scale_factor=512 / self.patch_size, mode='trilinear')
+        out = F.interpolate(
+            img.float(),
+            size=(self.patch_size, self.patch_size, self.patch_size),
+            mode='trilinear',
+            align_corners=False,
+        )
         
         # input_batch = (out.cuda() - pixel_mean) / pixel_std
         input_batch = out
