@@ -239,12 +239,7 @@ class SAM2_3D_prompt_after_decoder(nn.Module):
             reduction="mean"
         )
 
-        out = F.interpolate(
-            img.float(),
-            size=(self.patch_size, self.patch_size, self.patch_size),
-            mode='trilinear',
-            align_corners=False,
-        )
+        out = F.interpolate(img.float(), scale_factor=512 / self.patch_size, mode='trilinear')
         input_batch = out
         batch_features, feature_list,sample= self.img_encoder(input_batch)
         prev_masks = torch.zeros_like(seg).to(seg.device)
@@ -261,7 +256,7 @@ class SAM2_3D_prompt_after_decoder(nn.Module):
                 new_feature.append(feature)
                 if i==3:
                     _,point_embedding=self.prompt_encoder(image_embeddings=feature, points=[points_input, labels_input],boxes=None,masks=masks_to_prompt, img_size=list(feature.shape[2:]))
-            new_feature.append(out[:, 0:1])
+            new_feature.append(img[:, 0:1])
             if logits is None:
                 masks_prompt,masks_auto, logits = self.mask_decoder(new_feature, point_embedding, logits)
                 prev_masks = torch.sigmoid(masks_prompt)
@@ -444,12 +439,7 @@ class SAM2_3D_prompt_after_decoder_with_auto_test(nn.Module):
         dice_loss_auto=DiceLoss(include_background=False, softmax=True,sigmoid=False, to_onehot_y=True, reduction="none")
     #     loss_cal = DiceCELoss(include_background=False, softmax=True, to_onehot_y=True, lambda_dice=0.5, lambda_ce=0.5)
       
-        out = F.interpolate(
-            img.float(),
-            size=(self.patch_size, self.patch_size, self.patch_size),
-            mode='trilinear',
-            align_corners=False,
-        )
+        out = F.interpolate(img.float(), scale_factor=512 / self.patch_size, mode='trilinear')
         
         # input_batch = (out.cuda() - pixel_mean) / pixel_std
         input_batch = out
@@ -492,7 +482,7 @@ class SAM2_3D_prompt_after_decoder_with_auto_test(nn.Module):
                         _,point_embedding=self.prompt_encoder(image_embeddings=feature, points=[points_input, labels_input],boxes=None,masks=masks_to_prompt, img_size=list(feature.shape[2:]))
                 # img_resize = F.interpolate(img[:, 0:1], scale_factor=64 / self.patch_size,mode='trilinear',align_corners=False)
                 # new_feature.append(img_resize)\
-                new_feature.append(out[:, 0:1])
+                new_feature.append(img[:, 0:1])
                 # masks=self.mask_decoder(new_feature,point_embedding)
 
                 if logits is None:

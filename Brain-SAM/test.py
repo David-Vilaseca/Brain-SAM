@@ -339,7 +339,7 @@ def main():
 
     
     model.eval()
-    with torch.no_grad():
+    with torch.inference_mode():
         loss_summary = []
         loss_nsd = []
         results=[]
@@ -353,7 +353,8 @@ def main():
             
             img=img.to(device)
 
-            masks_auto,prompt_masks,postpre_masks= model(img,seg,6)
+            with torch.autocast(device_type="cuda", dtype=torch.bfloat16):
+                masks_auto,prompt_masks,postpre_masks= model(img,seg,6)
 
             masks_auto=torch.softmax(masks_auto, dim=1)
             masks_auto = masks_auto[:, 1:]
