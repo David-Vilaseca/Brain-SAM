@@ -234,7 +234,7 @@ def main():
         embedding_dim=768,
         mlp_dim=2048,
         num_heads=8),
-    image_embedding_size=(4,4,4),
+    image_embedding_size=(args.rand_crop_size[0] // 16, args.rand_crop_size[1] // 16, args.rand_crop_size[2] // 16),
     input_image_size=args.rand_crop_size,
     mask_in_chans=16,
     )

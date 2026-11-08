@@ -303,7 +303,7 @@ def main():
         embedding_dim=768,
         mlp_dim=2048,
         num_heads=8),
-    image_embedding_size=(args.rand_crop_size[0] // 4, args.rand_crop_size[1] // 4, args.rand_crop_size[2] // 4),
+    image_embedding_size=(args.rand_crop_size[0] // 16, args.rand_crop_size[1] // 16, args.rand_crop_size[2] // 16),
     input_image_size=args.rand_crop_size,
     mask_in_chans=16,
     )
@@ -339,7 +339,7 @@ def main():
 
     
     model.eval()
-    with torch.inference_mode():
+    with torch.no_grad():
         loss_summary = []
         loss_nsd = []
         results=[]
@@ -353,8 +353,7 @@ def main():
             
             img=img.to(device)
 
-            with torch.autocast(device_type="cuda", dtype=torch.bfloat16):
-                masks_auto,prompt_masks,postpre_masks= model(img,seg,6)
+            masks_auto,prompt_masks,postpre_masks= model(img,seg,6)
 
             masks_auto=torch.softmax(masks_auto, dim=1)
             masks_auto = masks_auto[:, 1:]
