@@ -57,13 +57,27 @@ Copy-Item C:\path\to\model.pth .\Brain-SAM\checkpoints\model.pth
 
 If the checkpoint is stored elsewhere, pass its path explicitly.
 
+Single-GPU / CPU:
+
 ```bash
-python Brain-SAM/test.py --data_prefix case --checkpoint Brain-SAM/checkpoints/model.pth
+python Brain-SAM/test.py --data_prefix case --checkpoint Brain-SAM/checkpoints/model.pth -bs 1
+```
+
+Multi-GPU (e.g., 2 GPUs with `torchrun`):
+
+```bash
+torchrun --standalone --nproc_per_node=2 Brain-SAM/test.py --data_prefix case --checkpoint Brain-SAM/checkpoints/model.pth -bs 1
 ```
 
 Inference automatically uses CUDA when available and falls back to CPU. The
 default test data is the included `case/` directory, and results are written to
 `outputs/`.
+
+### Batch Size (`-bs` / `--batch_size`)
+
+- **`-bs 1` (Recommended for evaluation)**: Processes each 3D volume individually so that each case receives its own distinct row in `outputs/result/.../loss_results.csv`.
+- **`-bs > 1` (Default: `2`)**: Batches multiple volumes together for higher inference throughput, though evaluation metrics in the output CSV will represent batch-level aggregations.
+- **Multi-GPU inference with `torchrun`**: When running across multiple GPUs (e.g., `--nproc_per_node=2`), PyTorch's `DistributedSampler` distributes samples across ranks. If the number of cases is not evenly divisible by the number of GPUs, `DistributedSampler` pads the dataset with duplicate samples so all ranks process equal batch counts. For evaluating small sets of cases without duplicate entries, run on a single GPU with `-bs 1`.
 
 ## Major Results
 Our results outperform the state-of-the-art methods in terms of both Dice and HD95.
